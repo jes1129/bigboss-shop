@@ -69,7 +69,7 @@
 
   /* ---- item list ---- */
   .list { padding: 6px 12px 14px; }
-  .row { display: grid; grid-template-columns: 28px 1fr 112px 96px 150px; gap: 10px; align-items: center; padding: 9px 8px; border-top: 2px dashed #e8d9c6; }
+  .row { display: grid; grid-template-columns: 28px 1fr 112px 96px 200px; gap: 10px; align-items: center; padding: 9px 8px; border-top: 2px dashed #e8d9c6; }
   .row:first-child { border-top: 0; }
   .row .rk { font-weight: 900; color: var(--cocoa-3); text-align: center; }
   .row .nm { font-weight: 700; min-width: 0; }
@@ -84,10 +84,12 @@
   .row .price input::placeholder { color: var(--cocoa-3); font-weight: 500; font-size: 12.5px; }
   .row .take { text-align: right; font-weight: 900; font-size: 17px; }
   .row .take.plus { color: var(--plus); } .row .take.minus { color: var(--minus); } .row .take.none { color: var(--cocoa-3); font-size: 13px; font-weight: 700; }
-  .row .st { display: flex; gap: 4px; justify-content: flex-end; }
+  .row .st { display: flex; gap: 4px; justify-content: flex-end; flex-wrap: wrap; }
   .row .st button { font: inherit; font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; border: 2px solid var(--line); background: #fff; cursor: pointer; color: var(--cocoa); }
   .row .st button[aria-pressed=true].sell { background: var(--sky); }
   .row .st button[aria-pressed=true].sold { background: var(--mint); }
+  .row .st button[aria-pressed=true].wait { background: var(--butter); }
+  .row.wait .nm::after { content: " ⏳ 還沒到貨"; font-size: 12px; color: var(--cocoa-2); }
   .row .st button[aria-pressed=true].no { background: #e9e2da; }
   .row.sold .nm { color: var(--plus); } .row.sold .nm::after { content: " ✓ 已賣出"; font-size: 12px; }
   .row.no { opacity: 0.55; }
@@ -258,19 +260,19 @@
     const total = sell.reduce((s, r) => s + (r.sub || 0), 0);
     const feeSum = sell.reduce((s, r) => s + (r.p == null ? 0 : fees(r.p) * r.it.q), 0);
     const sold = rows.filter(r => r.it.st === "已售").reduce((s, r) => s + (r.sub || 0), 0);
-    const nPriced = sell.filter(r => r.p != null).length, nNo = sell.length - nPriced;
+    const nPriced = sell.filter(r => r.p != null).length, nNo = sell.length - nPriced, nWait = sell.filter(r => r.it.st === "未到").length;
     document.getElementById("kpis").innerHTML = `
-      <div class="card kpi a"><div class="t">全部賣掉可以到手</div><div class="v num">${fmt(total)}</div><div class="s">${nPriced} 件有售價${nNo ? "，還有 " + nNo + " 件沒填" : ""}</div></div>
+      <div class="card kpi a"><div class="t">全部賣掉可以到手</div><div class="v num">${fmt(total)}</div><div class="s">${nPriced} 件有售價${nNo ? "，還有 " + nNo + " 件沒填" : ""}${nWait ? "，含 " + nWait + " 件未到貨" : ""}</div></div>
       <div class="card kpi b"><div class="t">會被 KOCA 收走</div><div class="v num">${fmt(feeSum)}</div><div class="s">平台費 + ${P.pay === "card" ? "信用卡" : P.pay === "atm" ? "轉帳" : "超商"}金流費</div></div>
-      <div class="card kpi c"><div class="t">已經賣出到手</div><div class="v num">${fmt(sold)}</div><div class="s">狀態按「已賣」就會累計</div></div>`;
+      <div class="card kpi c"><div class="t">已經賣出到手</div><div class="v num">${fmt(sold)}</div><div class="s">狀態按「已賣」就會累計；「未到」= 還沒到貨，先佔位</div></div>`;
 
     // list: 待售有價 by 到手 desc → 待售無價 → 已售 → 不賣
-    const order = r => r.it.st === "不賣" ? 3 : r.it.st === "已售" ? 2 : r.p == null ? 1 : 0;
+    const order = r => r.it.st === "不賣" ? 4 : r.it.st === "已售" ? 3 : r.p == null ? 2 : r.it.st === "未到" ? 1 : 0;
     rows.sort((a, b) => order(a) - order(b) || (b.sub || 0) - (a.sub || 0));
     const maxSub = Math.max(1, ...rows.filter(r => order(r) === 0).map(r => r.sub));
     let rank = 0;
     document.getElementById("list").innerHTML = rows.map(r => {
-      const it = r.it, cls = it.st === "已售" ? "sold" : it.st === "不賣" ? "no" : "";
+      const it = r.it, cls = it.st === "已售" ? "sold" : it.st === "不賣" ? "no" : it.st === "未到" ? "wait" : "";
       const rk = order(r) === 0 ? ++rank : "";
       const info = r.p == null ? "填了售價就會算" : `${it.q > 1 ? "×" + it.q + "　" : ""}手續費 ${fmt(fees(r.p))}${shipOf(it) ? " + 運費 " + shipOf(it) : ""}${r.p !== it.price ? "　折後 " + fmt(r.p) : ""}`;
       const bar = order(r) === 0 ? `<div class="bar" style="width:${Math.max(4, r.sub / maxSub * 100)}%"></div>` : "";
@@ -280,7 +282,7 @@
         <div class="nm"><input class="nmedit" data-n="${r.i}" value="${esc(it.n)}" maxlength="40" title="點一下可以改名稱">${it.custom ? '<span class="new">新</span>' : ""}<small>${info}</small>${bar}</div>
         <div class="price"><input type="number" inputmode="numeric" data-i="${r.i}" value="${it.price == null ? "" : it.price}" placeholder="填售價" min="0" step="10"><span>元</span></div>
         ${tk}
-        <div class="st">${[["待售", "sell", "待售"], ["已售", "sold", "已賣"], ["不賣", "no", "不賣"]].map(([v, c, l]) => `<button type="button" class="${c}" data-i="${r.i}" data-st="${v}" aria-pressed="${it.st === v}">${l}</button>`).join("")}${it.custom ? `<button type="button" class="del" data-del="${r.i}" title="刪除這個商品">刪</button>` : ""}</div>
+        <div class="st">${[["待售", "sell", "待售"], ["未到", "wait", "未到"], ["已售", "sold", "已賣"], ["不賣", "no", "不賣"]].map(([v, c, l]) => `<button type="button" class="${c}" data-i="${r.i}" data-st="${v}" aria-pressed="${it.st === v}">${l}</button>`).join("")}${it.custom ? `<button type="button" class="del" data-del="${r.i}" title="刪除這個商品">刪</button>` : ""}</div>
       </div>`;
     }).join("");
 
@@ -299,7 +301,7 @@
       const diff = (bTake == null || sep == null) ? null : bTake - sep;
       const saved = adds.reduce((s, a) => s + shipOf(a.it), 0);
       return `<div class="bcard">
-        <h3>${b.id}${main.st === "不賣" ? ' <span class="tag">目前不賣</span>' : ""}</h3>
+        <h3>${b.id}${main.st === "不賣" ? ' <span class="tag">目前不賣</span>' : main.st === "未到" ? ' <span class="tag">主件未到貨</span>' : ""}</h3>
         <div class="why">${b.why}</div>
         <div class="bl main"><div>${esc(main.n)}<small>主件，照售價</small></div><div class="fixed num ${mp == null ? "none" : ""}">${mp == null ? "先填售價" : fmt(mp)}</div></div>
         ${adds.map(a => `<div class="bl"><div>${esc(a.it.n)}<small>${a.base == null ? "沒單獨價，直接填加購價" : "單獨 " + fmt(a.base) + "，加購 85 折"}</small></div><input type="number" inputmode="numeric" data-ov="${esc(a.it.n)}" value="${a.price == null ? "" : a.price}" placeholder="加購價" min="0" step="10"></div>`).join("")}
