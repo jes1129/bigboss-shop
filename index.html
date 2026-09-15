@@ -196,7 +196,7 @@
 (function () {
   // 來源：bigboss.xlsx 工作表1（重複列合併成數量）。ship = 原表「包材+運費」，沒填的用賣貨便 38
   const BASE = [
-    ["9090辣妹桃", 1, null, 65], ["9090辣妹吉伊", 1, null, 65], ["巧克力吉伊", 1, null, 38],
+    ["9090辣妹桃", 1, null, 65], ["9090辣妹吉伊", 1, null, 65], ["巧克力吉伊 #1", 1, null, 38],
     ["狸貓小八(綁巧克力吉伊)", 1, null, null], ["9090辣妹小八", 1, null, 38],
     ["上海限定舞獅吉伊", 1, 550, null], ["東京上野限定熊貓烏薩奇", 1, 300, null], ["爬行寶寶烏薩奇", 1, 300, null],
     ["侧抱kitty吉伊", 1, 550, null], ["日本景品吉伊中娃(討伐棒)", 1, 450, null], ["日本景品吉伊中娃", 1, 360, null],
@@ -205,10 +205,11 @@
     ["聖誕B賞小八", 1, null, 38], ["地瓜s娃小八", 1, null, null], ["9090辣妹小八(第2件)", 1, null, null],
     ["薑餅吉伊", 1, null, null], ["平行小八", 1, null, null], ["9090辣妹烏薩奇", 1, null, 38, "不賣"],
     ["日本景品惡魔栗子", 1, 300, null], ["日本景品睡袋小八", 1, 350, null], ["日本景品瓦豆魯迪", 1, 350, null],
-    ["日本景品美樂蒂", 1, 250, null], ["日本景品航海王冥王雷利公仔", 3, 450, null], ["巧克力吉伊(5隻批次)", 5, null, 38],
+    ["日本景品美樂蒂", 1, 250, null], ["日本景品航海王冥王雷利公仔", 3, 450, null],
+    ["巧克力吉伊 #2", 1, null, 38], ["巧克力吉伊 #3", 1, null, 38], ["巧克力吉伊 #4", 1, null, 38], ["巧克力吉伊 #5", 1, null, 38], ["巧克力吉伊 #6", 1, null, 38],
   ].map(([n, q, price, ship, st]) => ({ n, q, price, ship, st: st || "待售" }));
   const BUNDLES = [
-    { id: "桃組", main: "9090辣妹桃", add: ["小桃大腸圈(台灣gigo)不保正版"], why: "唯一另一件小桃，單賣沒人要就當加購帶走（註明 gigo 不保正版）。" },
+    { id: "小桃組", main: "9090辣妹桃", add: ["小桃大腸圈(台灣gigo)不保正版"], why: "唯一另一件小桃，單賣沒人要就當加購帶走（註明 gigo 不保正版）。" },
     { id: "吉伊組", main: "9090辣妹吉伊", add: ["薑餅吉伊", "日本景品吉伊中娃"], why: "薑餅吉伊靠主件帶，吉伊中娃當第二加購。" },
     { id: "小八組", main: "9090辣妹小八", add: ["平行小八", "小八吊娃", "地瓜s娃小八", "日本景品睡袋小八"], why: "小八派一次收齊；買家不用全拿，讓他挑 1～2 件加購就好。平行小八單賣容易被殺價。" },
     { id: "烏薩奇組", main: "9090辣妹烏薩奇", add: ["爬行寶寶烏薩奇", "東京上野限定熊貓烏薩奇"], why: "目前不賣；哪天想賣，這兩件是天然加購。" },
@@ -221,6 +222,7 @@
     items = BASE.map(x => ({ ...x })); P = { ...DEF_P, ov: {} };
     try {
       const s = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (s && s.items && s.items.length === 29 && BASE.length === 33) s.items = s.items.slice(0, 28).concat([{}, {}, {}, {}, {}]);
       if (s && s.items && s.items.length === BASE.length) {
         s.items.forEach((o, i) => Object.assign(items[i], o)); Object.assign(P, s.P || {});
         (s.custom || []).forEach(c => items.push({ n: String(c.n || "").slice(0, 40), q: Math.max(1, Math.round(c.q || 1)), price: c.price == null ? null : Number(c.price), ship: c.ship == null ? null : Number(c.ship), st: c.st || "待售", custom: true }));
@@ -301,7 +303,7 @@
           <div class="d ${diff == null ? "" : diff >= 0 ? "plus" : "minus"}">${diff == null ? "填齊售價就會比較" : (diff >= 0 ? "比分開賣多拿 " + fmt(diff) : "比分開賣少拿 " + fmt(-diff) + "，換加購品一起出清") + "（省 " + fmt(saved) + " 運費）"}</div>
         </div></div>`;
     }).join("");
-    document.getElementById("uni").innerHTML = `<b>萬用加購：</b>巧克力吉伊有 5 隻，任何主件都可以「+1 巧克力吉伊」帶走；不要綁的：聖誕 B 賞小八（不是 9090，自己就是主件，單賣或用競標）、上海舞獅吉伊、側抱 kitty 吉伊、討伐棒吉伊（限定款自己會賣）、卡比 ×3、雷利 ×3（成套賣）、奶油色吉伊不保正版（別跟正版高價品同一筆）。`;
+    document.getElementById("uni").innerHTML = `<b>萬用加購：</b>巧克力吉伊有 6 隻（各自上架），任何主件都可以「+1 巧克力吉伊」帶走；不要綁的：聖誕 B 賞小八（不是 9090，自己就是主件，單賣或用競標）、上海舞獅吉伊、側抱 kitty 吉伊、討伐棒吉伊（限定款自己會賣）、卡比 ×3、雷利 ×3（成套賣）、奶油色吉伊不保正版（別跟正版高價品同一筆）。`;
   }
 
   // events
