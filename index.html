@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BigBoss 出清試算</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+TC:wght@500;700&display=swap">
+<style>
+  /* 單一主題：奶油底、粉紅腮紅、天空藍、奶油黃、深可可線條（貼紙風） */
+  :root {
+    color-scheme: light;
+    --cream: #fff6e6;
+    --paper: #fffdf7;
+    --pink: #f9c3d0;
+    --pink-deep: #e98aa3;
+    --sky: #bfe1f5;
+    --sky-deep: #6fb6dc;
+    --butter: #fbe6a0;
+    --mint: #cfeedd;
+    --cocoa: #5b4636;
+    --cocoa-2: #8a7261;
+    --cocoa-3: #b9a696;
+    --line: #5b4636;
+    --plus: #2f8f7a;
+    --minus: #e2607d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--cream); color: var(--cocoa);
+    background-image: radial-gradient(#f4dfc6 1.2px, transparent 1.3px); background-size: 22px 22px;
+    font: 15px/1.6 "Zen Maru Gothic", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 28px 18px 72px; display: grid; gap: 22px; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ---- header ---- */
+  header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  header svg { flex: none; }
+  header h1 { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: 0.02em; text-wrap: balance; }
+  header p { margin: 2px 0 0; color: var(--cocoa-2); font-size: 13.5px; }
+
+  /* ---- sticker card ---- */
+  .card { background: var(--paper); border: 2.5px solid var(--line); border-radius: 22px; box-shadow: 4px 5px 0 rgba(91,70,54,0.18); }
+  .card > h2 { margin: 0; padding: 14px 20px 0; font-size: 17px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+  .card > h2 .sub { font-weight: 500; font-size: 12.5px; color: var(--cocoa-2); }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 999px; background: var(--butter); border: 1.5px solid var(--line); }
+
+  /* ---- controls ---- */
+  .controls { padding: 14px 20px 16px; display: flex; gap: 18px 26px; flex-wrap: wrap; align-items: flex-end; }
+  .ctl label { display: block; font-size: 12.5px; color: var(--cocoa-2); font-weight: 700; margin-bottom: 6px; }
+  .pills { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+  .pills button { font: inherit; font-size: 13px; font-weight: 700; padding: 5px 13px; border-radius: 999px; border: 2px solid var(--line); background: #fff; color: var(--cocoa); cursor: pointer; }
+  .pills button[aria-pressed=true] { background: var(--pink); }
+  .pills button:hover { background: var(--butter); }
+  .pills button[aria-pressed=true]:hover { background: var(--pink); }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--sky-deep); outline-offset: 2px; }
+  .ctl.slider { min-width: 200px; flex: 1; }
+  input[type=range] { width: 100%; accent-color: var(--pink-deep); }
+
+  /* ---- KPI stickers ---- */
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 640px) { .kpis { grid-template-columns: 1fr; } }
+  .kpi { padding: 16px 18px 14px; position: relative; }
+  .kpi.a { background: var(--sky); } .kpi.b { background: var(--butter); } .kpi.c { background: var(--mint); }
+  .kpi .t { font-size: 13px; font-weight: 700; color: var(--cocoa-2); }
+  .kpi .v { font-size: 30px; font-weight: 900; line-height: 1.15; margin-top: 2px; }
+  .kpi .s { font-size: 12.5px; color: var(--cocoa-2); margin-top: 2px; }
+
+  /* ---- item list ---- */
+  .list { padding: 6px 12px 14px; }
+  .row { display: grid; grid-template-columns: 28px 1fr 112px 96px 118px; gap: 10px; align-items: center; padding: 9px 8px; border-top: 2px dashed #e8d9c6; }
+  .row:first-child { border-top: 0; }
+  .row .rk { font-weight: 900; color: var(--cocoa-3); text-align: center; }
+  .row .nm { font-weight: 700; min-width: 0; }
+  .row .nm small { display: block; font-weight: 500; font-size: 12px; color: var(--cocoa-2); }
+  .bar { height: 6px; border-radius: 4px; background: var(--sky-deep); margin-top: 4px; max-width: 100%; }
+  .row .price { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
+  .row .price input { width: 84px; font: inherit; font-weight: 700; font-size: 14px; padding: 5px 8px; border: 2px solid var(--line); border-radius: 12px; background: #fff; color: var(--cocoa); text-align: right; }
+  .row .price input::placeholder { color: var(--cocoa-3); font-weight: 500; font-size: 12.5px; }
+  .row .take { text-align: right; font-weight: 900; font-size: 17px; }
+  .row .take.plus { color: var(--plus); } .row .take.minus { color: var(--minus); } .row .take.none { color: var(--cocoa-3); font-size: 13px; font-weight: 700; }
+  .row .st { display: flex; gap: 4px; justify-content: flex-end; }
+  .row .st button { font: inherit; font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; border: 2px solid var(--line); background: #fff; cursor: pointer; color: var(--cocoa); }
+  .row .st button[aria-pressed=true].sell { background: var(--sky); }
+  .row .st button[aria-pressed=true].sold { background: var(--mint); }
+  .row .st button[aria-pressed=true].no { background: #e9e2da; }
+  .row.sold .nm { color: var(--plus); } .row.sold .nm::after { content: " ✓ 已賣出"; font-size: 12px; }
+  .row.no { opacity: 0.55; } .row.no .nm { text-decoration: line-through; }
+  @media (max-width: 640px) {
+    .row { grid-template-columns: 24px 1fr 96px; grid-template-rows: auto auto; }
+    .row .take { grid-column: 3; } .row .st { grid-column: 2 / 4; justify-content: flex-start; }
+  }
+
+  /* ---- bundles ---- */
+  .bgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; padding: 12px 20px 20px; }
+  .bcard { border: 2px solid var(--line); border-radius: 18px; background: #fff; overflow: hidden; }
+  .bcard h3 { margin: 0; padding: 10px 14px; font-size: 15px; font-weight: 900; background: var(--pink); border-bottom: 2px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  .bcard h3 .tag { background: #fff; }
+  .bcard .why { padding: 8px 14px 0; font-size: 12.5px; color: var(--cocoa-2); }
+  .bl { display: grid; grid-template-columns: 1fr 92px; gap: 8px; align-items: center; padding: 6px 14px; }
+  .bl.main { font-weight: 900; }
+  .bl small { display: block; font-size: 11.5px; color: var(--cocoa-2); font-weight: 500; }
+  .bl input { width: 92px; font: inherit; font-weight: 700; font-size: 13.5px; padding: 4px 8px; border: 2px solid var(--line); border-radius: 10px; background: #fff; text-align: right; color: var(--cocoa); }
+  .bl input::placeholder { color: var(--cocoa-3); font-weight: 500; font-size: 12px; }
+  .bl .fixed { text-align: right; font-weight: 900; }
+  .bl .fixed.none { color: var(--cocoa-3); font-size: 12px; font-weight: 700; }
+  .bsum { margin: 8px 10px 10px; padding: 10px 12px; background: var(--cream); border-radius: 12px; border: 2px dashed var(--cocoa-3); font-size: 13.5px; display: grid; gap: 2px; }
+  .bsum b { font-size: 16px; }
+  .bsum .d.plus { color: var(--plus); } .bsum .d.minus { color: var(--minus); }
+  .uni { padding: 0 20px 18px; font-size: 13.5px; color: var(--cocoa-2); }
+  .uni b { color: var(--cocoa); }
+
+  /* ---- tips ---- */
+  .tips { padding: 12px 20px 18px; display: grid; gap: 8px; font-size: 14px; max-width: 70ch; }
+  .tips div { padding-left: 22px; position: relative; }
+  .tips div::before { content: ""; position: absolute; left: 2px; top: 9px; width: 9px; height: 9px; border-radius: 50%; background: var(--pink-deep); border: 1.5px solid var(--line); }
+  .tips b { font-weight: 900; }
+  .foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; color: var(--cocoa-2); font-size: 12.5px; }
+  .foot button { font: inherit; font-size: 12.5px; font-weight: 700; padding: 5px 12px; border-radius: 999px; border: 2px solid var(--line); background: #fff; color: var(--cocoa); cursor: pointer; }
+  .foot button:hover { background: var(--butter); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true">
+      <ellipse cx="32" cy="36" rx="26" ry="23" fill="#fff" stroke="#5b4636" stroke-width="2.5"/>
+      <circle cx="23" cy="34" r="2.6" fill="#5b4636"/><circle cx="41" cy="34" r="2.6" fill="#5b4636"/>
+      <ellipse cx="16" cy="41" rx="4.5" ry="3" fill="#f9c3d0"/><ellipse cx="48" cy="41" rx="4.5" ry="3" fill="#f9c3d0"/>
+      <path d="M28 41 q4 3 8 0" fill="none" stroke="#5b4636" stroke-width="2" stroke-linecap="round"/>
+      <path d="M54 10 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#fbe6a0" stroke="#5b4636" stroke-width="1.5" stroke-linejoin="round"/>
+    </svg>
+    <div>
+      <h1>BigBoss 出清小帳本</h1>
+      <p>填售價 → 看到手多少 → 從上面開始賣。手續費用 KOCA 官方費率，運費用賣貨便。</p>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2>先選好 <span class="sub">影響每一件的到手金額</span></h2>
+    <div class="controls">
+      <div class="ctl"><label>買家通常怎麼付</label><div class="pills" id="pay"><button data-v="atm">轉帳（最多 15 元）</button><button data-v="card">信用卡 2.8%</button><button data-v="cvs">超商代碼 25 元</button></div></div>
+      <div class="ctl"><label>運費誰出</label><div class="pills" id="ship"><button data-v="N">我免運（賣貨便 38）</button><button data-v="Y">買家付</button></div></div>
+      <div class="ctl slider"><label>全部再打折 <span id="vDisc"></span></label><input type="range" id="disc" min="0" max="30" step="5"></div>
+    </div>
+  </section>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="card">
+    <h2>賣的順序 <span class="sub">照到手金額排，售價可以直接改</span></h2>
+    <div class="list" id="list"></div>
+  </section>
+
+  <section class="card">
+    <h2>綁著一起賣 <span class="sub">9090 當主件不折價，加購品打 85 折一起帶走，只寄一趟</span></h2>
+    <div class="bgrid" id="bgrid"></div>
+    <div class="uni" id="uni"></div>
+  </section>
+
+  <section class="card">
+    <h2>怎麼賣比較好</h2>
+    <div class="tips">
+      <div><b>9090 系列和聖誕 B 賞用競標。</b>你沒有市場價，讓買家出價最準；競標費現在優惠 2%，跟直購一樣。最後 5 分鐘有人出價會自動延長。</div>
+      <div><b>說明寫「歡迎轉帳」。</b>轉帳手續費最多 15 元；4,000 元的東西走信用卡要 112 元。</div>
+      <div><b>景品先賣。</b>雷利公仔 ×3、卡比背包 ×3 各自成套上架，不是吉伊卡哇客群，別綁進 9090。</div>
+      <div><b>費率已核對 KOCA 官方：</b>平台費 2%（扣運費後的商品金額，小數進位）＋信用卡 2.8%／轉帳 1% 上限 15／超商代碼固定 25。提領到非中國信託帳戶扣 15 元，集中一次領。</div>
+    </div>
+  </section>
+
+  <div class="foot"><span id="saved">改過的數字會記在這個瀏覽器</span><button id="reset">回到 Excel 原始資料</button></div>
+</div>
+
+<script>
+(function () {
+  // 來源：bigboss.xlsx 工作表1（重複列合併成數量）。ship = 原表「包材+運費」，沒填的用賣貨便 38
+  const BASE = [
+    ["9090辣妹桃", 1, null, 65], ["9090辣妹吉伊", 1, null, 65], ["巧克力吉伊", 1, null, 38],
+    ["狸貓小八(綁巧克力吉伊)", 1, null, null], ["9090辣妹小八", 1, null, 38],
+    ["上海限定舞獅吉伊", 1, 550, null], ["東京上野限定熊貓烏薩奇", 1, 300, null], ["爬行寶寶烏薩奇", 1, 300, null],
+    ["侧抱kitty吉伊", 1, 550, null], ["日本景品吉伊中娃(討伐棒)", 1, 450, null], ["日本景品吉伊中娃", 1, 360, null],
+    ["日本景品烏薩奇中娃", 1, 380, null], ["奶油色吉伊(台灣gigo)不保正版", 1, 350, null], ["小桃大腸圈(台灣gigo)不保正版", 1, 160, null],
+    ["小八吊娃", 1, 400, null], ["日本景品卡比之星背包", 3, 350, null], ["日本景品維尼小熊", 1, null, null],
+    ["聖誕B賞小八", 1, null, 38], ["地瓜s娃小八", 1, null, null], ["9090辣妹小八(第2件)", 1, null, null],
+    ["薑餅吉伊", 1, null, null], ["平行小八", 1, null, null], ["9090辣妹烏薩奇", 1, null, 38, "不賣"],
+    ["日本景品惡魔栗子", 1, 300, null], ["日本景品睡袋小八", 1, 350, null], ["日本景品瓦豆魯迪", 1, 350, null],
+    ["日本景品美樂蒂", 1, 250, null], ["日本景品航海王冥王雷利公仔", 3, 450, null], ["巧克力吉伊(5隻批次)", 5, null, 38],
+  ].map(([n, q, price, ship, st]) => ({ n, q, price, ship, st: st || "待售" }));
+  const BUNDLES = [
+    { id: "桃組", main: "9090辣妹桃", add: ["小桃大腸圈(台灣gigo)不保正版"], why: "唯一另一件小桃，單賣沒人要就當加購帶走（註明 gigo 不保正版）。" },
+    { id: "吉伊組", main: "9090辣妹吉伊", add: ["薑餅吉伊", "日本景品吉伊中娃"], why: "薑餅吉伊靠主件帶，吉伊中娃當第二加購。" },
+    { id: "小八組", main: "9090辣妹小八", add: ["平行小八", "小八吊娃"], why: "小八派一次收齊，平行小八單賣容易被殺價。" },
+    { id: "聖誕小八組", main: "聖誕B賞小八", add: ["地瓜s娃小八", "日本景品睡袋小八"], why: "B 賞本身是主件等級，兩件小八順便帶。" },
+    { id: "烏薩奇組", main: "9090辣妹烏薩奇", add: ["爬行寶寶烏薩奇", "東京上野限定熊貓烏薩奇"], why: "目前不賣；哪天想賣，這兩件是天然加購。" },
+  ];
+  const PLAT = 0.02, CARD = 0.028, ATM = 0.01, ATM_CAP = 15, CVS = 25, DEF_SHIP = 38, ADD_DISC = 0.85;
+  const KEY = "bigboss-cute-v1", DEF_P = { pay: "atm", ship: "N", disc: 0, ov: {} };
+  let items, P;
+
+  function load() {
+    items = BASE.map(x => ({ ...x })); P = { ...DEF_P, ov: {} };
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (s && s.items && s.items.length === BASE.length) { s.items.forEach((o, i) => Object.assign(items[i], o)); Object.assign(P, s.P || {}); }
+    } catch (e) {}
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify({ items: items.map(({ price, st }) => ({ price, st })), P })); document.getElementById("saved").textContent = "已記住你的修改"; }
+    catch (e) { document.getElementById("saved").textContent = "此瀏覽器無法儲存修改"; }
+  }
+
+  // KOCA 費率：平台費 2% 無條件進位；信用卡 2.8% 四捨五入；轉帳 1% 上限 15；超商固定 25
+  const payFee = t => P.pay === "card" ? Math.round(t * CARD) : P.pay === "atm" ? Math.min(Math.round(t * ATM), ATM_CAP) : CVS;
+  const fees = t => Math.ceil(t * PLAT) + payFee(t);
+  const shipOf = it => P.ship === "Y" ? 0 : (it.ship == null ? DEF_SHIP : it.ship);
+  const sp = it => it.price == null ? null : Math.round(it.price * (1 - P.disc / 100));
+  const take = it => { const p = sp(it); return p == null ? null : p - fees(p) - shipOf(it); };
+  const fmt = v => v == null ? "—" : Math.round(v).toLocaleString("zh-TW");
+  const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const byName = n => items.find(it => it.n === n);
+
+  function render() {
+    document.querySelectorAll("#pay button, #ship button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === P[b.parentElement.id])));
+    document.getElementById("disc").value = P.disc; document.getElementById("vDisc").textContent = P.disc ? "−" + P.disc + "%" : "不打折";
+
+    const rows = items.map((it, i) => ({ it, i, p: sp(it), t: take(it), sub: take(it) == null ? null : take(it) * it.q }));
+    const sell = rows.filter(r => r.it.st !== "不賣");
+    const total = sell.reduce((s, r) => s + (r.sub || 0), 0);
+    const feeSum = sell.reduce((s, r) => s + (r.p == null ? 0 : fees(r.p) * r.it.q), 0);
+    const sold = rows.filter(r => r.it.st === "已售").reduce((s, r) => s + (r.sub || 0), 0);
+    const nPriced = sell.filter(r => r.p != null).length, nNo = sell.length - nPriced;
+    document.getElementById("kpis").innerHTML = `
+      <div class="card kpi a"><div class="t">全部賣掉可以到手</div><div class="v num">${fmt(total)}</div><div class="s">${nPriced} 件有售價${nNo ? "，還有 " + nNo + " 件沒填" : ""}</div></div>
+      <div class="card kpi b"><div class="t">會被 KOCA 收走</div><div class="v num">${fmt(feeSum)}</div><div class="s">平台費 + ${P.pay === "card" ? "信用卡" : P.pay === "atm" ? "轉帳" : "超商"}金流費</div></div>
+      <div class="card kpi c"><div class="t">已經賣出到手</div><div class="v num">${fmt(sold)}</div><div class="s">狀態按「已賣」就會累計</div></div>`;
+
+    // list: 待售有價 by 到手 desc → 待售無價 → 已售 → 不賣
+    const order = r => r.it.st === "不賣" ? 3 : r.it.st === "已售" ? 2 : r.p == null ? 1 : 0;
+    rows.sort((a, b) => order(a) - order(b) || (b.sub || 0) - (a.sub || 0));
+    const maxSub = Math.max(1, ...rows.filter(r => order(r) === 0).map(r => r.sub));
+    let rank = 0;
+    document.getElementById("list").innerHTML = rows.map(r => {
+      const it = r.it, cls = it.st === "已售" ? "sold" : it.st === "不賣" ? "no" : "";
+      const rk = order(r) === 0 ? ++rank : "";
+      const info = r.p == null ? "填了售價就會算" : `${it.q > 1 ? "×" + it.q + "　" : ""}手續費 ${fmt(fees(r.p))}${shipOf(it) ? " + 運費 " + shipOf(it) : ""}${r.p !== it.price ? "　折後 " + fmt(r.p) : ""}`;
+      const bar = order(r) === 0 ? `<div class="bar" style="width:${Math.max(4, r.sub / maxSub * 100)}%"></div>` : "";
+      const tk = r.t == null ? `<span class="take none">還沒售價</span>` : `<span class="take num ${r.t < 0 ? "minus" : "plus"}">${fmt(r.sub)}</span>`;
+      return `<div class="row ${cls}">
+        <div class="rk num">${rk}</div>
+        <div class="nm">${esc(it.n)}<small>${info}</small>${bar}</div>
+        <div class="price"><input type="number" inputmode="numeric" data-i="${r.i}" value="${it.price == null ? "" : it.price}" placeholder="填售價" min="0" step="10"><span>元</span></div>
+        ${tk}
+        <div class="st">${[["待售", "sell", "待售"], ["已售", "sold", "已賣"], ["不賣", "no", "不賣"]].map(([v, c, l]) => `<button class="${c}" data-i="${r.i}" data-st="${v}" aria-pressed="${it.st === v}">${l}</button>`).join("")}</div>
+      </div>`;
+    }).join("");
+
+    renderBundles();
+  }
+
+  function renderBundles() {
+    document.getElementById("bgrid").innerHTML = BUNDLES.map(b => {
+      const main = byName(b.main), mp = sp(main);
+      const adds = b.add.map(n => { const it = byName(n); const ov = P.ov[n]; const base = sp(it); return { it, base, price: ov != null ? ov : (base == null ? null : Math.round(base * ADD_DISC)) }; });
+      const ok = mp != null && adds.every(a => a.price != null);
+      const total = ok ? mp + adds.reduce((s, a) => s + a.price, 0) : null;
+      const bTake = ok ? total - fees(total) - shipOf(main) : null;
+      const sepOk = mp != null && adds.every(a => a.base != null);
+      const sep = sepOk ? (mp - fees(mp) - shipOf(main)) + adds.reduce((s, a) => s + a.base - fees(a.base) - shipOf(a.it), 0) : null;
+      const diff = (bTake == null || sep == null) ? null : bTake - sep;
+      const saved = adds.reduce((s, a) => s + shipOf(a.it), 0);
+      return `<div class="bcard">
+        <h3>${b.id}${main.st === "不賣" ? ' <span class="tag">目前不賣</span>' : ""}</h3>
+        <div class="why">${b.why}</div>
+        <div class="bl main"><div>${esc(main.n)}<small>主件，照售價</small></div><div class="fixed num ${mp == null ? "none" : ""}">${mp == null ? "先填售價" : fmt(mp)}</div></div>
+        ${adds.map(a => `<div class="bl"><div>${esc(a.it.n)}<small>${a.base == null ? "沒單獨價，直接填加購價" : "單獨 " + fmt(a.base) + "，加購 85 折"}</small></div><input type="number" inputmode="numeric" data-ov="${esc(a.it.n)}" value="${a.price == null ? "" : a.price}" placeholder="加購價" min="0" step="10"></div>`).join("")}
+        <div class="bsum">
+          <div>組合價 <b class="num">${fmt(total)}</b>　到手 <b class="num">${fmt(bTake)}</b></div>
+          <div class="d ${diff == null ? "" : diff >= 0 ? "plus" : "minus"}">${diff == null ? "填齊售價就會比較" : (diff >= 0 ? "比分開賣多拿 " + fmt(diff) : "比分開賣少拿 " + fmt(-diff) + "，換加購品一起出清") + "（省 " + fmt(saved) + " 運費）"}</div>
+        </div></div>`;
+    }).join("");
+    document.getElementById("uni").innerHTML = `<b>萬用加購：</b>巧克力吉伊有 5 隻，任何主件都可以「+1 巧克力吉伊」帶走；不要綁的：上海舞獅吉伊、側抱 kitty 吉伊、討伐棒吉伊（限定款自己會賣）、卡比 ×3、雷利 ×3（成套賣）、奶油色吉伊不保正版（別跟正版高價品同一筆）。`;
+  }
+
+  // events
+  document.getElementById("list").addEventListener("change", e => { const t = e.target; if (t.dataset.i == null || t.tagName !== "INPUT") return; items[+t.dataset.i].price = t.value === "" ? null : Number(t.value); save(); render(); });
+  document.getElementById("list").addEventListener("click", e => { const b = e.target.closest("button[data-st]"); if (!b) return; items[+b.dataset.i].st = b.dataset.st; save(); render(); });
+  document.getElementById("bgrid").addEventListener("change", e => { const t = e.target; if (!t.dataset.ov) return; if (t.value === "") delete P.ov[t.dataset.ov]; else P.ov[t.dataset.ov] = Number(t.value); save(); render(); });
+  for (const id of ["pay", "ship"]) document.getElementById(id).addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; P[id] = b.dataset.v; save(); render(); });
+  document.getElementById("disc").addEventListener("input", e => { P.disc = Number(e.target.value); save(); render(); });
+  document.getElementById("reset").addEventListener("click", () => { if (!confirm("清掉這頁改過的數字，回到 Excel 原始資料？")) return; try { localStorage.removeItem(KEY); } catch (e) {} load(); render(); });
+
+  load(); render();
+})();
+</script>
+</body>
+</html>
