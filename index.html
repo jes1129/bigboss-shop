@@ -74,6 +74,10 @@
   .row .rk { font-weight: 900; color: var(--cocoa-3); text-align: center; }
   .row .nm { font-weight: 700; min-width: 0; }
   .row .nm small { display: block; font-weight: 500; font-size: 12px; color: var(--cocoa-2); }
+  .row .nmedit { font: inherit; font-weight: 700; font-size: 15px; color: var(--cocoa); background: transparent; border: 0; border-bottom: 2px dashed transparent; border-radius: 0; padding: 0 2px; width: calc(100% - 34px); max-width: 100%; }
+  .row .nmedit:hover { border-bottom-color: var(--cocoa-3); }
+  .row .nmedit:focus { border-bottom-color: var(--pink-deep); outline: none; background: #fff; }
+  .row.no .nmedit { text-decoration: line-through; } .row.sold .nmedit { color: var(--plus); }
   .bar { height: 6px; border-radius: 4px; background: var(--sky-deep); margin-top: 4px; max-width: 100%; }
   .row .price { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
   .row .price input { width: 84px; font: inherit; font-weight: 700; font-size: 14px; padding: 5px 8px; border: 2px solid var(--line); border-radius: 12px; background: #fff; color: var(--cocoa); text-align: right; }
@@ -86,7 +90,7 @@
   .row .st button[aria-pressed=true].sold { background: var(--mint); }
   .row .st button[aria-pressed=true].no { background: #e9e2da; }
   .row.sold .nm { color: var(--plus); } .row.sold .nm::after { content: " ✓ 已賣出"; font-size: 12px; }
-  .row.no { opacity: 0.55; } .row.no .nm { text-decoration: line-through; }
+  .row.no { opacity: 0.55; }
   @media (max-width: 640px) {
     .row { grid-template-columns: 24px 1fr 96px; grid-template-rows: auto auto; }
     .row .take { grid-column: 3; } .row .st { grid-column: 2 / 4; justify-content: flex-start; }
@@ -161,7 +165,7 @@
   <section class="kpis" id="kpis"></section>
 
   <section class="card">
-    <h2>賣的順序 <span class="sub">照到手金額排，售價可以直接改</span></h2>
+    <h2>賣的順序 <span class="sub">照到手金額排；名稱、售價都可以直接點來改</span></h2>
     <form class="addbox" id="addbox" autocomplete="off">
       <span class="lab">新增商品（有新東西要賣就加在這）</span>
       <input class="nmi" id="addName" placeholder="商品名稱，例如：9090辣妹栗子" maxlength="40" required>
@@ -201,13 +205,13 @@
     ["上海限定舞獅吉伊", 1, 550, null], ["東京上野限定熊貓烏薩奇", 1, 300, null], ["爬行寶寶烏薩奇", 1, 300, null],
     ["侧抱kitty吉伊", 1, 550, null], ["日本景品吉伊中娃(討伐棒)", 1, 450, null], ["日本景品吉伊中娃", 1, 360, null],
     ["日本景品烏薩奇中娃", 1, 380, null], ["奶油色吉伊(台灣gigo)不保正版", 1, 350, null], ["小桃大腸圈(台灣gigo)不保正版", 1, 160, null],
-    ["小八吊娃", 1, 400, null], ["日本景品卡比之星背包", 3, 350, null], ["日本景品維尼小熊", 1, null, null],
+    ["小八吊娃", 1, 400, null], ["日本景品卡比之星背包 #1", 1, 350, null], ["日本景品卡比之星背包 #2", 1, 350, null], ["日本景品卡比之星背包 #3", 1, 350, null], ["日本景品維尼小熊", 1, null, null],
     ["聖誕B賞小八", 1, null, 38], ["地瓜s娃小八", 1, null, null], ["9090辣妹小八(第2件)", 1, null, null],
     ["薑餅吉伊", 1, null, null], ["平行小八", 1, null, null], ["9090辣妹烏薩奇", 1, null, 38, "不賣"],
     ["日本景品惡魔栗子", 1, 300, null], ["日本景品睡袋小八", 1, 350, null], ["日本景品瓦豆魯迪", 1, 350, null],
-    ["日本景品美樂蒂", 1, 250, null], ["日本景品航海王冥王雷利公仔", 3, 450, null],
+    ["日本景品美樂蒂", 1, 250, null], ["日本景品航海王冥王雷利公仔 #1", 1, 450, null], ["日本景品航海王冥王雷利公仔 #2", 1, 450, null], ["日本景品航海王冥王雷利公仔 #3", 1, 450, null],
     ["巧克力吉伊 #2", 1, null, 38], ["巧克力吉伊 #3", 1, null, 38], ["巧克力吉伊 #4", 1, null, 38], ["巧克力吉伊 #5", 1, null, 38], ["巧克力吉伊 #6", 1, null, 38],
-  ].map(([n, q, price, ship, st]) => ({ n, q, price, ship, st: st || "待售" }));
+  ].map(([n, q, price, ship, st]) => ({ id: n, n, q, price, ship, st: st || "待售" }));
   const BUNDLES = [
     { id: "小桃組", main: "9090辣妹桃", add: ["小桃大腸圈(台灣gigo)不保正版"], why: "唯一另一件小桃，單賣沒人要就當加購帶走（註明 gigo 不保正版）。" },
     { id: "吉伊組", main: "9090辣妹吉伊", add: ["薑餅吉伊", "日本景品吉伊中娃"], why: "薑餅吉伊靠主件帶，吉伊中娃當第二加購。" },
@@ -222,15 +226,16 @@
     items = BASE.map(x => ({ ...x })); P = { ...DEF_P, ov: {} };
     try {
       const s = JSON.parse(localStorage.getItem(KEY) || "null");
-      if (s && s.items && s.items.length === 29 && BASE.length === 33) s.items = s.items.slice(0, 28).concat([{}, {}, {}, {}, {}]);
+      if (s && s.items && s.items.length === 29) s.items = s.items.slice(0, 28).concat([{}, {}, {}, {}, {}]);
+      if (s && s.items && s.items.length === 33) s.items = s.items.slice(0, 16).concat([{}, {}], s.items.slice(16, 28), [{}, {}], s.items.slice(28));
       if (s && s.items && s.items.length === BASE.length) {
         s.items.forEach((o, i) => Object.assign(items[i], o)); Object.assign(P, s.P || {});
-        (s.custom || []).forEach(c => items.push({ n: String(c.n || "").slice(0, 40), q: Math.max(1, Math.round(c.q || 1)), price: c.price == null ? null : Number(c.price), ship: c.ship == null ? null : Number(c.ship), st: c.st || "待售", custom: true }));
+        (s.custom || []).forEach((c, k) => items.push({ id: c.id || "c" + k, n: String(c.n || "").slice(0, 40), q: Math.max(1, Math.round(c.q || 1)), price: c.price == null ? null : Number(c.price), ship: c.ship == null ? null : Number(c.ship), st: c.st || "待售", custom: true }));
       }
     } catch (e) {}
   }
   function save() {
-    try { localStorage.setItem(KEY, JSON.stringify({ items: items.filter(it => !it.custom).map(({ price, st }) => ({ price, st })), custom: items.filter(it => it.custom).map(({ n, q, price, ship, st }) => ({ n, q, price, ship, st })), P })); document.getElementById("saved").textContent = "已記住你的修改"; }
+    try { localStorage.setItem(KEY, JSON.stringify({ items: items.filter(it => !it.custom).map(({ price, st, n }) => ({ price, st, n })), custom: items.filter(it => it.custom).map(({ id, n, q, price, ship, st }) => ({ id, n, q, price, ship, st })), P })); document.getElementById("saved").textContent = "已記住你的修改"; }
     catch (e) { document.getElementById("saved").textContent = "此瀏覽器無法儲存修改"; }
   }
 
@@ -242,7 +247,7 @@
   const take = it => { const p = sp(it); return p == null ? null : p - fees(p) - shipOf(it); };
   const fmt = v => v == null ? "—" : Math.round(v).toLocaleString("zh-TW");
   const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const byName = n => items.find(it => it.n === n);
+  const byId = id => items.find(it => it.id === id);
 
   function render() {
     document.querySelectorAll("#pay button, #ship button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === P[b.parentElement.id])));
@@ -272,7 +277,7 @@
       const tk = r.t == null ? `<span class="take none">還沒售價</span>` : `<span class="take num ${r.t < 0 ? "minus" : "plus"}">${fmt(r.sub)}</span>`;
       return `<div class="row ${cls}">
         <div class="rk num">${rk}</div>
-        <div class="nm">${esc(it.n)}${it.custom ? '<span class="new">新</span>' : ""}<small>${info}</small>${bar}</div>
+        <div class="nm"><input class="nmedit" data-n="${r.i}" value="${esc(it.n)}" maxlength="40" title="點一下可以改名稱">${it.custom ? '<span class="new">新</span>' : ""}<small>${info}</small>${bar}</div>
         <div class="price"><input type="number" inputmode="numeric" data-i="${r.i}" value="${it.price == null ? "" : it.price}" placeholder="填售價" min="0" step="10"><span>元</span></div>
         ${tk}
         <div class="st">${[["待售", "sell", "待售"], ["已售", "sold", "已賣"], ["不賣", "no", "不賣"]].map(([v, c, l]) => `<button type="button" class="${c}" data-i="${r.i}" data-st="${v}" aria-pressed="${it.st === v}">${l}</button>`).join("")}${it.custom ? `<button type="button" class="del" data-del="${r.i}" title="刪除這個商品">刪</button>` : ""}</div>
@@ -284,8 +289,8 @@
 
   function renderBundles() {
     document.getElementById("bgrid").innerHTML = BUNDLES.map(b => {
-      const main = byName(b.main), mp = sp(main);
-      const adds = b.add.map(n => { const it = byName(n); const ov = P.ov[n]; const base = sp(it); return { it, base, price: ov != null ? ov : (base == null ? null : Math.round(base * ADD_DISC)) }; });
+      const main = byId(b.main), mp = sp(main);
+      const adds = b.add.map(n => { const it = byId(n); const ov = P.ov[n]; const base = sp(it); return { it, base, price: ov != null ? ov : (base == null ? null : Math.round(base * ADD_DISC)) }; });
       const ok = mp != null && adds.every(a => a.price != null);
       const total = ok ? mp + adds.reduce((s, a) => s + a.price, 0) : null;
       const bTake = ok ? total - fees(total) - shipOf(main) : null;
@@ -303,11 +308,15 @@
           <div class="d ${diff == null ? "" : diff >= 0 ? "plus" : "minus"}">${diff == null ? "填齊售價就會比較" : (diff >= 0 ? "比分開賣多拿 " + fmt(diff) : "比分開賣少拿 " + fmt(-diff) + "，換加購品一起出清") + "（省 " + fmt(saved) + " 運費）"}</div>
         </div></div>`;
     }).join("");
-    document.getElementById("uni").innerHTML = `<b>萬用加購：</b>巧克力吉伊有 6 隻（各自上架），任何主件都可以「+1 巧克力吉伊」帶走；不要綁的：聖誕 B 賞小八（不是 9090，自己就是主件，單賣或用競標）、上海舞獅吉伊、側抱 kitty 吉伊、討伐棒吉伊（限定款自己會賣）、卡比 ×3、雷利 ×3（成套賣）、奶油色吉伊不保正版（別跟正版高價品同一筆）。`;
+    document.getElementById("uni").innerHTML = `<b>萬用加購：</b>巧克力吉伊有 6 隻（各自上架），任何主件都可以「+1 巧克力吉伊」帶走；不要綁的：聖誕 B 賞小八（不是 9090，自己就是主件，單賣或用競標）、上海舞獅吉伊、側抱 kitty 吉伊、討伐棒吉伊（限定款自己會賣）、卡比、雷利（各自上架，不是吉伊卡哇客群）、奶油色吉伊不保正版（別跟正版高價品同一筆）。`;
   }
 
   // events
-  document.getElementById("list").addEventListener("change", e => { const t = e.target; if (t.dataset.i == null || t.tagName !== "INPUT") return; items[+t.dataset.i].price = t.value === "" ? null : Number(t.value); save(); render(); });
+  document.getElementById("list").addEventListener("change", e => {
+    const t = e.target; if (t.tagName !== "INPUT") return;
+    if (t.dataset.n != null) { const v = t.value.trim(); if (v) items[+t.dataset.n].n = v; save(); render(); return; }
+    if (t.dataset.i == null) return; items[+t.dataset.i].price = t.value === "" ? null : Number(t.value); save(); render();
+  });
   document.getElementById("list").addEventListener("click", e => {
     const d = e.target.closest("button[data-del]");
     if (d) { const it = items[+d.dataset.del]; if (confirm(`刪除「${it.n}」？`)) { items.splice(+d.dataset.del, 1); save(); render(); } return; }
@@ -319,7 +328,7 @@
     if (!name) return;
     const q = Math.max(1, Math.round(Number(document.getElementById("addQty").value) || 1));
     const pv = document.getElementById("addPrice").value, sv = document.getElementById("addShip").value;
-    items.push({ n: name, q, price: pv === "" ? null : Number(pv), ship: sv === "" ? null : Number(sv), st: "待售", custom: true });
+    items.push({ id: "c" + Date.now(), n: name, q, price: pv === "" ? null : Number(pv), ship: sv === "" ? null : Number(sv), st: "待售", custom: true });
     e.target.reset(); document.getElementById("addQty").value = 1;
     save(); render(); document.getElementById("addName").focus();
   });
