@@ -69,7 +69,7 @@
 
   /* ---- item list ---- */
   .list { padding: 6px 12px 14px; }
-  .row { display: grid; grid-template-columns: 28px 1fr 112px 96px 118px; gap: 10px; align-items: center; padding: 9px 8px; border-top: 2px dashed #e8d9c6; }
+  .row { display: grid; grid-template-columns: 28px 1fr 112px 96px 150px; gap: 10px; align-items: center; padding: 9px 8px; border-top: 2px dashed #e8d9c6; }
   .row:first-child { border-top: 0; }
   .row .rk { font-weight: 900; color: var(--cocoa-3); text-align: center; }
   .row .nm { font-weight: 700; min-width: 0; }
@@ -91,6 +91,18 @@
     .row { grid-template-columns: 24px 1fr 96px; grid-template-rows: auto auto; }
     .row .take { grid-column: 3; } .row .st { grid-column: 2 / 4; justify-content: flex-start; }
   }
+
+  .addbox { margin: 10px 8px 4px; padding: 10px 12px; background: var(--butter); border: 2px dashed var(--line); border-radius: 14px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .addbox input { font: inherit; font-size: 14px; padding: 6px 10px; border: 2px solid var(--line); border-radius: 12px; background: #fff; color: var(--cocoa); }
+  .addbox input::placeholder { color: var(--cocoa-3); font-size: 13px; }
+  .addbox .nmi { flex: 1 1 180px; min-width: 140px; }
+  .addbox .sm { width: 84px; text-align: right; }
+  .addbox button { font: inherit; font-weight: 900; font-size: 14px; padding: 6px 16px; border-radius: 999px; border: 2px solid var(--line); background: var(--pink); color: var(--cocoa); cursor: pointer; }
+  .addbox button:hover { background: var(--pink-deep); color: #fff; }
+  .addbox .lab { font-size: 12.5px; font-weight: 700; color: var(--cocoa-2); flex-basis: 100%; }
+  .row .del { font: inherit; font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; border: 2px solid var(--cocoa-3); background: #fff; color: var(--cocoa-2); cursor: pointer; }
+  .row .del:hover { border-color: var(--minus); color: var(--minus); }
+  .row .nm .new { display: inline-block; font-size: 10.5px; font-weight: 900; padding: 0 6px; border-radius: 999px; background: var(--mint); border: 1.5px solid var(--line); margin-left: 4px; vertical-align: 2px; }
 
   /* ---- bundles ---- */
   .bgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; padding: 12px 20px 20px; }
@@ -150,6 +162,14 @@
 
   <section class="card">
     <h2>賣的順序 <span class="sub">照到手金額排，售價可以直接改</span></h2>
+    <form class="addbox" id="addbox" autocomplete="off">
+      <span class="lab">新增商品（有新東西要賣就加在這）</span>
+      <input class="nmi" id="addName" placeholder="商品名稱，例如：9090辣妹栗子" maxlength="40" required>
+      <input class="sm" id="addQty" type="number" inputmode="numeric" placeholder="數量" min="1" step="1" value="1">
+      <input class="sm" id="addPrice" type="number" inputmode="numeric" placeholder="售價" min="0" step="10">
+      <input class="sm" id="addShip" type="number" inputmode="numeric" placeholder="運費 38" min="0" step="1">
+      <button type="submit">加入</button>
+    </form>
     <div class="list" id="list"></div>
   </section>
 
@@ -202,11 +222,14 @@
     items = BASE.map(x => ({ ...x })); P = { ...DEF_P, ov: {} };
     try {
       const s = JSON.parse(localStorage.getItem(KEY) || "null");
-      if (s && s.items && s.items.length === BASE.length) { s.items.forEach((o, i) => Object.assign(items[i], o)); Object.assign(P, s.P || {}); }
+      if (s && s.items && s.items.length === BASE.length) {
+        s.items.forEach((o, i) => Object.assign(items[i], o)); Object.assign(P, s.P || {});
+        (s.custom || []).forEach(c => items.push({ n: String(c.n || "").slice(0, 40), q: Math.max(1, Math.round(c.q || 1)), price: c.price == null ? null : Number(c.price), ship: c.ship == null ? null : Number(c.ship), st: c.st || "待售", custom: true }));
+      }
     } catch (e) {}
   }
   function save() {
-    try { localStorage.setItem(KEY, JSON.stringify({ items: items.map(({ price, st }) => ({ price, st })), P })); document.getElementById("saved").textContent = "已記住你的修改"; }
+    try { localStorage.setItem(KEY, JSON.stringify({ items: items.filter(it => !it.custom).map(({ price, st }) => ({ price, st })), custom: items.filter(it => it.custom).map(({ n, q, price, ship, st }) => ({ n, q, price, ship, st })), P })); document.getElementById("saved").textContent = "已記住你的修改"; }
     catch (e) { document.getElementById("saved").textContent = "此瀏覽器無法儲存修改"; }
   }
 
@@ -248,10 +271,10 @@
       const tk = r.t == null ? `<span class="take none">還沒售價</span>` : `<span class="take num ${r.t < 0 ? "minus" : "plus"}">${fmt(r.sub)}</span>`;
       return `<div class="row ${cls}">
         <div class="rk num">${rk}</div>
-        <div class="nm">${esc(it.n)}<small>${info}</small>${bar}</div>
+        <div class="nm">${esc(it.n)}${it.custom ? '<span class="new">新</span>' : ""}<small>${info}</small>${bar}</div>
         <div class="price"><input type="number" inputmode="numeric" data-i="${r.i}" value="${it.price == null ? "" : it.price}" placeholder="填售價" min="0" step="10"><span>元</span></div>
         ${tk}
-        <div class="st">${[["待售", "sell", "待售"], ["已售", "sold", "已賣"], ["不賣", "no", "不賣"]].map(([v, c, l]) => `<button class="${c}" data-i="${r.i}" data-st="${v}" aria-pressed="${it.st === v}">${l}</button>`).join("")}</div>
+        <div class="st">${[["待售", "sell", "待售"], ["已售", "sold", "已賣"], ["不賣", "no", "不賣"]].map(([v, c, l]) => `<button type="button" class="${c}" data-i="${r.i}" data-st="${v}" aria-pressed="${it.st === v}">${l}</button>`).join("")}${it.custom ? `<button type="button" class="del" data-del="${r.i}" title="刪除這個商品">刪</button>` : ""}</div>
       </div>`;
     }).join("");
 
@@ -284,7 +307,21 @@
 
   // events
   document.getElementById("list").addEventListener("change", e => { const t = e.target; if (t.dataset.i == null || t.tagName !== "INPUT") return; items[+t.dataset.i].price = t.value === "" ? null : Number(t.value); save(); render(); });
-  document.getElementById("list").addEventListener("click", e => { const b = e.target.closest("button[data-st]"); if (!b) return; items[+b.dataset.i].st = b.dataset.st; save(); render(); });
+  document.getElementById("list").addEventListener("click", e => {
+    const d = e.target.closest("button[data-del]");
+    if (d) { const it = items[+d.dataset.del]; if (confirm(`刪除「${it.n}」？`)) { items.splice(+d.dataset.del, 1); save(); render(); } return; }
+    const b = e.target.closest("button[data-st]"); if (!b) return; items[+b.dataset.i].st = b.dataset.st; save(); render();
+  });
+  document.getElementById("addbox").addEventListener("submit", e => {
+    e.preventDefault();
+    const name = document.getElementById("addName").value.trim();
+    if (!name) return;
+    const q = Math.max(1, Math.round(Number(document.getElementById("addQty").value) || 1));
+    const pv = document.getElementById("addPrice").value, sv = document.getElementById("addShip").value;
+    items.push({ n: name, q, price: pv === "" ? null : Number(pv), ship: sv === "" ? null : Number(sv), st: "待售", custom: true });
+    e.target.reset(); document.getElementById("addQty").value = 1;
+    save(); render(); document.getElementById("addName").focus();
+  });
   document.getElementById("bgrid").addEventListener("change", e => { const t = e.target; if (!t.dataset.ov) return; if (t.value === "") delete P.ov[t.dataset.ov]; else P.ov[t.dataset.ov] = Number(t.value); save(); render(); });
   for (const id of ["pay", "ship"]) document.getElementById(id).addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; P[id] = b.dataset.v; save(); render(); });
   document.getElementById("disc").addEventListener("input", e => { P.disc = Number(e.target.value); save(); render(); });
